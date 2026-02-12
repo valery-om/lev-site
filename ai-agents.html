@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="ru" style="background:#0a0a0a">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI-агенты для вашего бизнеса — Лев Ом</title>
+  <meta name="description" content="Персональная консультация по AI-агентам. Разберёмся, какие AI-агенты нужны именно вам, и составим план внедрения.">
+  <script>
+    // Apply saved theme instantly to prevent flash
+    (function(){
+      if(localStorage.getItem('theme')==='light'){
+        document.documentElement.classList.add('light');
+        document.documentElement.style.background='#f5f5f0';
+      }
+    })();
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg: 'var(--c-bg)',
+            card: 'var(--c-card)',
+            border: 'var(--c-border)',
+            accent: 'var(--c-accent)',
+            txt: 'var(--c-txt)',
+            muted: 'var(--c-muted)',
+          },
+          fontFamily: {
+            heading: ['Unbounded', 'sans-serif'],
+            body: ['Onest', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600;700&family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ===== CSS VARIABLES (THEME) ===== */
+    :root {
+      --c-bg: #0a0a0a;
+      --c-txt: #e5e5e5;
+      --c-card: #141414;
+      --c-border: #2a2a2a;
+      --c-muted: #8a8a8a;
+      --c-accent: #c8ff00;
+      --c-accent-rgb: 200, 255, 0;
+      --c-accent-glow: rgba(200, 255, 0, 0.3);
+      --c-accent-btn-text: #0a0a0a;
+      --c-watermark: rgba(200, 255, 0, 0.06);
+      --c-watermark-hover: rgba(200, 255, 0, 0.12);
+    }
+    html.light {
+      --c-bg: #f5f5f0;
+      --c-txt: #1a1a1a;
+      --c-card: #ffffff;
+      --c-border: #e0e0e0;
+      --c-muted: #666666;
+      --c-accent: #1a7a3a;
+      --c-accent-rgb: 26, 122, 58;
+      --c-accent-glow: rgba(26, 122, 58, 0.25);
+      --c-accent-btn-text: #ffffff;
+      --c-watermark: rgba(26, 122, 58, 0.06);
+      --c-watermark-hover: rgba(26, 122, 58, 0.14);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Onest', sans-serif;
+      background: var(--c-bg);
+      color: var(--c-txt);
+      overflow-x: hidden;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Theme transition for themed elements */
+    .theme-transition,
+    nav, footer, .card-hover, .btn-accent, .btn-outline,
+    .faq-item, .sticky-cta, section {
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+
+    /* Grain overlay */
+    .grain::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 256px 256px;
+    }
+
+    /* Fade-in animations */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Accent line before section headings */
+    .accent-line::before {
+      content: '';
+      display: block;
+      width: 60px;
+      height: 3px;
+      background: var(--c-accent);
+      margin-bottom: 16px;
+    }
+
+    /* Card hover */
+    .card-hover {
+      transition: border-color 0.3s ease, transform 0.3s ease, background-color 0.3s ease;
+    }
+    .card-hover:hover {
+      border-color: var(--c-accent);
+      transform: translateY(-4px);
+    }
+
+    /* CTA glow */
+    .btn-accent {
+      color: var(--c-accent-btn-text);
+      transition: box-shadow 0.3s ease, transform 0.15s ease, background-color 0.3s ease, color 0.3s ease;
+    }
+    .btn-accent:hover {
+      box-shadow: 0 0 30px var(--c-accent-glow);
+    }
+    .btn-accent:active {
+      transform: scale(0.97);
+    }
+
+    /* Outline button */
+    .btn-outline {
+      transition: border-color 0.3s ease, color 0.3s ease;
+    }
+    .btn-outline:hover {
+      border-color: var(--c-accent);
+      color: var(--c-accent);
+    }
+
+    /* Pulse dot */
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.5); }
+    }
+    .pulse-dot {
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    /* Number watermark */
+    .number-watermark {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 6rem;
+      font-weight: 700;
+      color: var(--c-watermark);
+      position: absolute;
+      top: -10px;
+      left: 16px;
+      line-height: 1;
+      transition: color 0.3s ease;
+      pointer-events: none;
+    }
+    .card-hover:hover .number-watermark {
+      color: var(--c-watermark-hover);
+    }
+
+    /* FAQ */
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease, padding 0.3s ease;
+    }
+    .faq-item.open .faq-answer {
+      max-height: 200px;
+      padding-bottom: 20px;
+    }
+    .faq-icon {
+      transition: transform 0.3s ease;
+    }
+    .faq-item.open .faq-icon {
+      transform: rotate(45deg);
+    }
+
+    /* Sticky mobile CTA */
+    .sticky-cta {
+      transform: translateY(100%);
+      transition: transform 0.4s ease;
+    }
+    .sticky-cta.show {
+      transform: translateY(0);
+    }
+
+    /* Nav blur */
+    .nav-blur {
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    /* Hero glow */
+    .hero-glow {
+      background: radial-gradient(ellipse 60% 50% at 50% 40%, rgba(var(--c-accent-rgb), 0.08), transparent);
+    }
+
+    /* Stat card */
+    .stat-value {
+      font-family: 'Unbounded', sans-serif;
+    }
+
+    /* ===== THEME TOGGLE ===== */
+    .theme-toggle {
+      position: relative;
+      width: 56px;
+      height: 28px;
+      background: var(--c-card);
+      border: 1px solid var(--c-border);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+      flex-shrink: 0;
+    }
+    .theme-toggle:hover {
+      border-color: var(--c-accent);
+    }
+    .theme-toggle-thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 20px;
+      height: 20px;
+      background: var(--c-accent);
+      border-radius: 50%;
+      transition: transform 0.3s ease, background-color 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    html.light .theme-toggle-thumb {
+      transform: translateX(28px);
+    }
+    .theme-toggle-icon {
+      width: 12px;
+      height: 12px;
+      fill: var(--c-accent-btn-text);
+      transition: fill 0.3s ease;
+    }
+    .theme-toggle .icon-sun { display: none; }
+    .theme-toggle .icon-moon { display: block; }
+    html.light .theme-toggle .icon-sun { display: block; }
+    html.light .theme-toggle .icon-moon { display: none; }
+  </style>
+</head>
+<body class="grain">
+
+  <!-- NAV -->
+  <nav class="fixed top-0 left-0 right-0 z-50 nav-blur bg-bg/80 border-b border-border">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <a href="/" class="font-heading text-lg font-semibold text-txt hover:text-accent transition-colors">Лев Ом</a>
+      <div class="flex items-center gap-3 sm:gap-5">
+        <a href="/consultations.html" class="hidden sm:block text-sm text-muted hover:text-txt transition-colors">Консультации</a>
+        <!-- Theme toggle -->
+        <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему">
+          <div class="theme-toggle-thumb">
+            <svg class="theme-toggle-icon icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/></svg>
+            <svg class="theme-toggle-icon icon-sun" viewBox="0 0 24 24"><path d="M12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12zm0-16v2m0 12v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
+          </div>
+        </button>
+        <a href="#book" class="text-sm font-semibold bg-accent px-4 py-2 rounded-lg btn-accent" style="color:var(--c-accent-btn-text)">Записаться</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section id="hero" class="relative min-h-screen flex items-center pt-16">
+    <div class="hero-glow absolute inset-0 pointer-events-none"></div>
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-32 relative z-10">
+      <div class="fade-in">
+        <!-- Badge -->
+        <div class="inline-flex items-center gap-2 bg-card border border-border rounded-full px-4 py-2 mb-8">
+          <span class="w-2 h-2 bg-accent rounded-full pulse-dot inline-block"></span>
+          <span class="text-sm text-muted">Запись открыта — осталось 3 места в феврале</span>
+        </div>
+
+        <!-- H1 -->
+        <h1 class="font-heading text-3xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+          AI-агенты для<br><span class="text-accent">вашего бизнеса</span>
+        </h1>
+
+        <!-- Subtitle -->
+        <p class="text-lg sm:text-xl text-muted max-w-2xl mb-6">
+          Персональная консультация: разберёмся, какие AI-агенты нужны именно вам, и составим план внедрения.
+        </p>
+
+        <!-- Params -->
+        <p class="text-sm text-muted mb-10 tracking-wide">60 минут · онлайн · $100</p>
+
+        <!-- Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4">
+          <a href="#book" class="inline-flex items-center justify-center gap-2 bg-accent font-semibold px-8 py-4 rounded-xl text-base btn-accent">
+            Записаться на консультацию →
+          </a>
+          <a href="#how" class="inline-flex items-center justify-center gap-2 border border-border text-txt font-medium px-8 py-4 rounded-xl text-base btn-outline">
+            Как это работает
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ПРОБЛЕМА -->
+  <section class="py-20 sm:py-28">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="fade-in">
+        <h2 class="font-heading text-2xl sm:text-3xl lg:text-4xl font-bold mb-12 max-w-3xl accent-line">
+          Все говорят про AI-агентов.<br>Но мало кто понимает, с&nbsp;чего начать.
+        </h2>
+      </div>
+      <div class="grid sm:grid-cols-2 gap-4 sm:gap-6">
+        <div class="fade-in bg-card border border-border rounded-2xl p-6 sm:p-8 card-hover">
+          <div class="text-2xl mb-4">🤷</div>
+          <h3 class="font-heading text-base font-semibold mb-2">Непонятно, что отдать AI</h3>
+          <p class="text-sm text-muted leading-relaxed">Какие процессы автоматизировать первыми? Что принесёт максимум пользы, а что — пустая трата денег?</p>
+        </div>
+        <div class="fade-in bg-card border border-border rounded-2xl p-6 sm:p-8 card-hover">
+          <div class="text-2xl mb-4">💸</div>
+          <h3 class="font-heading text-base font-semibold mb-2">Страшно вложить деньги впустую</h3>
+          <p class="text-sm text-muted leading-relaxed">Инструментов сотни, каждый обещает «революцию». Как не потратить бюджет на то, что не взлетит?</p>
+        </div>
+        <div class="fade-in bg-card border border-border rounded-2xl p-6 sm:p-8 card-hover">
+          <div class="text-2xl mb-4">⏰</div>
+          <h3 class="font-heading text-base font-semibold mb-2">Нет времени разбираться</h3>
+          <p class="text-sm text-muted leading-relaxed">Бизнес не ждёт. Пока вы изучаете ChatGPT, конкуренты уже внедряют агентов в продажи и сервис.</p>
+        </div>
+        <div class="fade-in bg-card border border-border rounded-2xl p-6 sm:p-8 card-hover">
+          <div class="text-2xl mb-4">🧭</div>
+          <h3 class="font-heading text-base font-semibold mb-2">Нужен кто-то с опытом</h3>
+          <p class="text-sm text-muted leading-relaxed">Не очередной «эксперт» из YouTube, а практик, который уже внедрял AI-агентов в реальные проекты.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ЧТО ПОЛУЧИТЕ -->
+  <section class="py-20 sm:py-28">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="fade-in">
+        <h2 class="font-heading text-2xl sm:text-3xl lg:text-4xl font-bold mb-12 accent-line">Что вы получите</h2>
+      </div>
+      <div class="grid sm:grid-cols-3 gap-4 sm:gap-6">
+        <div class="fade-in bg-card border border-border rounded-2xl p-6 sm:p-8 card-hover relative overflow-hidden">
+          <span class="number-watermark">01</span>
+          <div class="relative z-10">
+            <h3 class="font-heading text-base font-semibold mb-3 mt-8">Аудит процессов</h3>
+            <p class="text-sm text-muted leading-relaxed">Разберём ваши бизнес-процессы и найдём, где AI-агенты принесут максимум пользы уже сейчас.</p>
+          </div>
+        </div>
+        <div class="fade-in bg-card border border-border rounded-2xl p-6 sm:p-8 card-hover relative overflow-hidden">
+          <span class="number-watermark">02</span>
+          <div class="relative z-10">
+            <h3 class="font-heading text-base font-semibold mb-3 mt-8">Подбор инструментов</h3>
+            <p class="text-sm text-muted leading-relaxed">Подберу конкретные инструменты и платформы под ваши задачи — без переплат и лишних сервисов.</p>
+          </div>
+        </div>
+        <div class="fade-in bg-card border border-border rounded-2xl p-6 sm:p-8 card-hover relative overflow-hidden">
+          <span class="number-watermark">03</span>
+          <div class="relative z-10">
+            <h3 class="font-heading text-base font-semibold mb-3 mt-8">План внедрения</h3>
+            <p class="text-sm text-muted leading-relaxed">Получите пошаговый план с приоритетами, сроками и ожидаемым результатом на каждом этапе.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ПОЧЕМУ Я -->
+  <section class="py-20 sm:py-28">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="fade-in">
+        <h2 class="font-heading text-2xl sm:text-3xl lg:text-4xl font-bold mb-8 accent-line">Почему я</h2>
+      </div>
+      <div class="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start">
+        <div class="fade-in">
+          <p class="text-muted leading-relaxed mb-4">
+            Меня зовут <span class="text-txt font-semibold">Лев Ом</span>. 8+ лет в маркетинге и автоматизации. Соучредитель <span class="text-txt font-semibold">SINTEZ Agency</span>. Я купил Mac Mini специально для экспериментов с AI-агентами — и с тех пор не&nbsp;останавливаюсь.
+          </p>
+          <p class="text-muted leading-relaxed mb-4">
+            50+ проектов, где AI уже работает. Я не просто «слежу за трендами» — я внедряю агентов в реальные бизнесы каждый день.
+          </p>
+          <p class="text-muted leading-relaxed">
+            <span class="text-accent font-semibold">Практика, не теория.</span> На консультации вы получите не общие слова, а конкретные решения, которые можно внедрить уже завтра.
+          </p>
+        </div>
+        <div class="fade-in grid grid-cols-2 gap-4">
+          <div class="bg-card border border-border rounded-2xl p-6 text-center card-hover">
+            <div class="stat-value text-3xl sm:text-4xl font-bold text-accent mb-2">8+</div>
+            <p class="text-xs text-muted">лет в маркетинге</p>
+          </div>
+          <div class="bg-card border border-border rounded-2xl p-6 text-center card-hover">
+            <div class="stat-value text-3xl sm:text-4xl font-bold text-accent mb-2">50+</div>
+            <p class="text-xs text-muted">проектов с AI</p>
+          </div>
+          <div class="bg-card border border-border rounded-2xl p-6 text-center card-hover">
+            <div class="stat-value text-3xl sm:text-4xl font-bold text-accent mb-2">AI</div>
+            <p class="text-xs text-muted">агенты каждый день</p>
+          </div>
+          <div class="bg-card border border-border rounded-2xl p-6 text-center card-hover">
+            <div class="stat-value text-3xl sm:text-4xl font-bold text-accent mb-2">&infin;</div>
+            <p class="text-xs text-muted">энтузиазм</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- КАК ПРОХОДИТ -->
+  <section id="how" class="py-20 sm:py-28">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="fade-in">
+        <h2 class="font-heading text-2xl sm:text-3xl lg:text-4xl font-bold mb-12 accent-line">Как проходит консультация</h2>
+      </div>
+      <div class="grid sm:grid-cols-3 gap-4 sm:gap-6">
+        <div class="fade-in bg-card border border-border rounded-2xl p-6 sm:p-8 card-hover relative overflow-hidden">
+          <span class="number-watermark">01</span>
+          <div class="relative z-10">
+            <div class="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center mb-4 mt-4">
+              <span class="text-accent font-heading font-bold text-sm">1</span>
+            </div>
+            <h3 class="font-heading text-base font-semibold mb-2">Заполняете анкету</h3>
+            <p class="text-sm text-muted leading-relaxed">Короткая анкета о вашем бизнесе и задачах — чтобы я подготовился и не тратил ваше время на базовые вопросы.</p>
+          </div>
+        </div>
+        <div class="fade-in bg-card border border-border rounded-2xl p-6 sm:p-8 card-hover relative overflow-hidden">
+          <span class="number-watermark">02</span>
+          <div class="relative z-10">
+            <div class="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center mb-4 mt-4">
+              <span class="text-accent font-heading font-bold text-sm">2</span>
+            </div>
+            <h3 class="font-heading text-base font-semibold mb-2">Созвон 60 минут</h3>
+            <p class="text-sm text-muted leading-relaxed">Разбираем процессы, находим точки роста, подбираем инструменты. Всё записывается — получите запись.</p>
+          </div>
+        </div>
+        <div class="fade-in bg-card border border-border rounded-2xl p-6 sm:p-8 card-hover relative overflow-hidden">
+          <span class="number-watermark">03</span>
+          <div class="relative z-10">
+            <div class="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center mb-4 mt-4">
+              <span class="text-accent font-heading font-bold text-sm">3</span>
+            </div>
+            <h3 class="font-heading text-base font-semibold mb-2">План действий</h3>
+            <p class="text-sm text-muted leading-relaxed">После созвона получите документ с пошаговым планом внедрения, ссылками на инструменты и приоритетами.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ЦЕНА -->
+  <section id="book" class="py-20 sm:py-28">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6">
+      <div class="fade-in bg-card border border-border rounded-3xl p-8 sm:p-12 text-center relative overflow-hidden">
+        <!-- Glow -->
+        <div class="absolute inset-0 bg-gradient-radial pointer-events-none" style="background: radial-gradient(ellipse at center, rgba(var(--c-accent-rgb),0.04), transparent 70%);"></div>
+        <div class="relative z-10">
+          <div class="accent-line flex justify-center"><span></span></div>
+          <p class="text-sm text-muted uppercase tracking-widest mb-4 font-medium">Консультация</p>
+          <div class="font-heading text-5xl sm:text-7xl font-bold text-accent mb-8">$100</div>
+          <ul class="text-left max-w-sm mx-auto space-y-3 mb-10">
+            <li class="flex items-start gap-3 text-sm text-muted">
+              <span class="text-accent mt-0.5">&#10003;</span>
+              <span>Аудит бизнес-процессов</span>
+            </li>
+            <li class="flex items-start gap-3 text-sm text-muted">
+              <span class="text-accent mt-0.5">&#10003;</span>
+              <span>Подбор AI-инструментов под ваши задачи</span>
+            </li>
+            <li class="flex items-start gap-3 text-sm text-muted">
+              <span class="text-accent mt-0.5">&#10003;</span>
+              <span>Пошаговый план внедрения</span>
+            </li>
+            <li class="flex items-start gap-3 text-sm text-muted">
+              <span class="text-accent mt-0.5">&#10003;</span>
+              <span>Живое демо инструментов</span>
+            </li>
+            <li class="flex items-start gap-3 text-sm text-muted">
+              <span class="text-accent mt-0.5">&#10003;</span>
+              <span>Запись созвона</span>
+            </li>
+          </ul>
+          <a href="https://t.me/omelnickiy" target="_blank" rel="noopener" class="inline-flex items-center justify-center gap-2 bg-accent font-semibold px-8 py-4 rounded-xl text-base btn-accent w-full sm:w-auto">
+            Написать в Telegram →
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="py-20 sm:py-28">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6">
+      <div class="fade-in">
+        <h2 class="font-heading text-2xl sm:text-3xl lg:text-4xl font-bold mb-12 accent-line">Частые вопросы</h2>
+      </div>
+      <div class="space-y-3 fade-in">
+        <div class="faq-item bg-card border border-border rounded-2xl overflow-hidden cursor-pointer card-hover" onclick="toggleFaq(this)">
+          <div class="flex items-center justify-between p-5 sm:p-6">
+            <span class="text-sm sm:text-base font-medium pr-4">Нужны ли технические знания?</span>
+            <span class="faq-icon text-accent text-xl font-light flex-shrink-0">+</span>
+          </div>
+          <div class="faq-answer px-5 sm:px-6">
+            <p class="text-sm text-muted leading-relaxed">Нет. Консультация рассчитана на предпринимателей и менеджеров. Я объясняю всё простым языком — без кода и технического жаргона.</p>
+          </div>
+        </div>
+        <div class="faq-item bg-card border border-border rounded-2xl overflow-hidden cursor-pointer card-hover" onclick="toggleFaq(this)">
+          <div class="flex items-center justify-between p-5 sm:p-6">
+            <span class="text-sm sm:text-base font-medium pr-4">Подойдёт ли для моей ниши?</span>
+            <span class="faq-icon text-accent text-xl font-light flex-shrink-0">+</span>
+          </div>
+          <div class="faq-answer px-5 sm:px-6">
+            <p class="text-sm text-muted leading-relaxed">AI-агенты работают в любой нише: ecom, услуги, SaaS, образование, производство. Если у вас есть повторяющиеся процессы — им есть что автоматизировать.</p>
+          </div>
+        </div>
+        <div class="faq-item bg-card border border-border rounded-2xl overflow-hidden cursor-pointer card-hover" onclick="toggleFaq(this)">
+          <div class="flex items-center justify-between p-5 sm:p-6">
+            <span class="text-sm sm:text-base font-medium pr-4">А если AI-агенты мне не подойдут?</span>
+            <span class="faq-icon text-accent text-xl font-light flex-shrink-0">+</span>
+          </div>
+          <div class="faq-answer px-5 sm:px-6">
+            <p class="text-sm text-muted leading-relaxed">Честно скажу об этом. Если увижу, что на текущем этапе AI-агенты не дадут вам результата — я не буду навязывать. Лучше сэкономить деньги и вернуться позже.</p>
+          </div>
+        </div>
+        <div class="faq-item bg-card border border-border rounded-2xl overflow-hidden cursor-pointer card-hover" onclick="toggleFaq(this)">
+          <div class="flex items-center justify-between p-5 sm:p-6">
+            <span class="text-sm sm:text-base font-medium pr-4">Как происходит оплата?</span>
+            <span class="faq-icon text-accent text-xl font-light flex-shrink-0">+</span>
+          </div>
+          <div class="faq-answer px-5 sm:px-6">
+            <p class="text-sm text-muted leading-relaxed">Оплата до консультации. После оплаты пришлю анкету и ссылку на запись. Если по какой-то причине консультация не состоится — верну 100%.</p>
+          </div>
+        </div>
+        <div class="faq-item bg-card border border-border rounded-2xl overflow-hidden cursor-pointer card-hover" onclick="toggleFaq(this)">
+          <div class="flex items-center justify-between p-5 sm:p-6">
+            <span class="text-sm sm:text-base font-medium pr-4">Сколько мест в месяц?</span>
+            <span class="faq-icon text-accent text-xl font-light flex-shrink-0">+</span>
+          </div>
+          <div class="faq-answer px-5 sm:px-6">
+            <p class="text-sm text-muted leading-relaxed">Максимум 8 мест в месяц. Каждый клиент получает моё полное внимание — поэтому я сознательно ограничиваю поток.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ФИНАЛЬНЫЙ CTA -->
+  <section class="py-20 sm:py-28">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 text-center">
+      <div class="fade-in">
+        <h2 class="font-heading text-2xl sm:text-3xl lg:text-4xl font-bold mb-6">
+          Готовы внедрить<br><span class="text-accent">AI-агентов?</span>
+        </h2>
+        <p class="text-muted mb-10 max-w-lg mx-auto">Напишите мне в Telegram — обсудим, чем AI-агенты могут помочь вашему бизнесу.</p>
+        <a href="https://t.me/omelnickiy" target="_blank" rel="noopener" class="inline-flex items-center justify-center gap-2 bg-accent font-semibold px-8 py-4 rounded-xl text-base btn-accent">
+          Написать в Telegram →
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-border py-12">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-6">
+        <a href="/" class="font-heading text-lg font-semibold text-txt hover:text-accent transition-colors">Лев Ом</a>
+        <div class="flex items-center gap-6">
+          <a href="https://instagram.com/omelnickiy" target="_blank" rel="noopener" class="text-sm text-muted hover:text-txt transition-colors">Instagram</a>
+          <a href="https://tiktok.com/@omelnickiy" target="_blank" rel="noopener" class="text-sm text-muted hover:text-txt transition-colors">TikTok</a>
+          <a href="https://t.me/omelnickiy_ai" target="_blank" rel="noopener" class="text-sm text-muted hover:text-txt transition-colors">Telegram</a>
+          <a href="https://sintez.agency" target="_blank" rel="noopener" class="text-sm text-muted hover:text-txt transition-colors">SINTEZ</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- STICKY MOBILE CTA -->
+  <div id="stickyCta" class="sticky-cta fixed bottom-0 left-0 right-0 z-40 p-4 bg-bg/90 nav-blur border-t border-border sm:hidden">
+    <a href="#book" class="flex items-center justify-center gap-2 bg-accent font-semibold py-3.5 rounded-xl text-sm btn-accent w-full">
+      Записаться на консультацию →
+    </a>
+  </div>
+
+  <script>
+    // ===== THEME TOGGLE =====
+    (function() {
+      const html = document.documentElement;
+      const saved = localStorage.getItem('theme');
+      if (saved === 'light') {
+        html.classList.add('light');
+        html.style.background = '#f5f5f0';
+      } else {
+        html.style.background = '#0a0a0a';
+      }
+    })();
+
+    document.getElementById('themeToggle').addEventListener('click', function() {
+      const html = document.documentElement;
+      html.classList.toggle('light');
+      const isLight = html.classList.contains('light');
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+      html.style.background = isLight ? '#f5f5f0' : '#0a0a0a';
+    });
+
+    // Fade-in on scroll
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    // FAQ accordion
+    function toggleFaq(item) {
+      const isOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+      if (!isOpen) item.classList.add('open');
+    }
+
+    // Sticky mobile CTA — show after scrolling past hero
+    const hero = document.getElementById('hero');
+    const stickyCta = document.getElementById('stickyCta');
+
+    const stickyObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) {
+          stickyCta.classList.add('show');
+        } else {
+          stickyCta.classList.remove('show');
+        }
+      });
+    }, { threshold: 0 });
+
+    stickyObserver.observe(hero);
+  </script>
+
+</body>
+</html>
