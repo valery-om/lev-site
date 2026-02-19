@@ -290,10 +290,8 @@ const STYLES = `<style>
       font-family: 'Unbounded', sans-serif;
       font-size: 1.35rem;
       font-weight: 700;
-      margin-top: 3.5rem;
+      margin-top: 2rem;
       margin-bottom: 1.25rem;
-      padding-top: 2.5rem;
-      border-top: 1px solid var(--c-border);
       color: var(--c-txt);
     }
     .prose h2::before {
@@ -304,11 +302,6 @@ const STYLES = `<style>
       background: var(--c-accent);
       margin-bottom: 1rem;
       border-radius: 2px;
-    }
-    .prose > h2:first-child {
-      margin-top: 0;
-      padding-top: 0;
-      border-top: none;
     }
     .prose h3 {
       font-family: 'Unbounded', sans-serif;
@@ -431,7 +424,7 @@ const STYLES = `<style>
       background: var(--c-card);
     }
     @media (max-width: 640px) {
-      .prose h2 { font-size: 1.15rem; margin-top: 2.5rem; padding-top: 2rem; }
+      .prose h2 { font-size: 1.15rem; margin-top: 1.5rem; }
       .prose h3 { font-size: 0.95rem; }
       .prose blockquote { padding: 1rem 1.25rem; }
       .prose thead, .prose tbody, .prose tr { display: table; width: 100%; table-layout: auto; }
@@ -532,6 +525,64 @@ const SCRIPTS = `<script>
     })();
   </script>`;
 
+// ── Schema.org helpers ───────────────────────────────────
+
+function articleSchema(post) {
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": post.meta.title,
+    "description": post.meta.description || '',
+    "author": {
+      "@type": "Person",
+      "name": "Лев Ом",
+      "jobTitle": "AI-автоматизация маркетинга",
+      "url": "https://lev.omlab.club"
+    },
+    "datePublished": post.meta.date,
+    "mainEntityOfPage": `https://lev.omlab.club/blog/${post.slug}.html`
+  };
+  return `<script type="application/ld+json">${JSON.stringify(schema)}</script>`;
+}
+
+function faqSchema(html) {
+  // Extract FAQ: find h3 + p pairs (simple pattern)
+  const faqRegex = /<h3>(.*?)<\/h3>\s*<p>(.*?)<\/p>/gs;
+  const pairs = [];
+  let match;
+  let inFaq = false;
+  // Split by h2 to find the FAQ section
+  const sections = html.split(/<h2>/);
+  for (const section of sections) {
+    if (/частые вопросы|faq/i.test(section.split('</h2>')[0])) {
+      while ((match = faqRegex.exec(section)) !== null) {
+        pairs.push({ q: match[1].replace(/<[^>]+>/g, ''), a: match[2].replace(/<[^>]+>/g, '') });
+      }
+    }
+  }
+  if (pairs.length === 0) return '';
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": pairs.map(p => ({
+      "@type": "Question",
+      "name": p.q,
+      "acceptedAnswer": { "@type": "Answer", "text": p.a }
+    }))
+  };
+  return `<script type="application/ld+json">${JSON.stringify(schema)}</script>`;
+}
+
+function ogTags(post) {
+  return `<meta property="og:title" content="${post.meta.title}">
+  <meta property="og:description" content="${post.meta.description || ''}">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://lev.omlab.club/blog/${post.slug}.html">
+  <meta property="article:published_time" content="${post.meta.date}">
+  <meta property="article:author" content="Лев Ом">
+  <link rel="canonical" href="https://lev.omlab.club/blog/${post.slug}.html">`;
+}
+
 // ── Card HTML (reused in blog.html and index.html preview) ──
 
 function postCard(post) {
@@ -579,6 +630,9 @@ for (const post of posts) {
 <html lang="ru" style="background:#0a0a0a">
 <head>
   ${HEAD_COMMON(`${post.meta.title} — Лев Ом`, post.meta.description || '')}
+  ${ogTags(post)}
+  ${articleSchema(post)}
+  ${faqSchema(post.html)}
   ${STYLES}
 </head>
 <body class="grain">
