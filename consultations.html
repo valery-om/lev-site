@@ -199,6 +199,29 @@
     .theme-toggle .icon-moon { display: block; }
     html.light .theme-toggle .icon-sun { display: block; }
     html.light .theme-toggle .icon-moon { display: none; }
+
+    /* Currency converter */
+    .currency-select {
+      appearance: none;
+      -webkit-appearance: none;
+      background: var(--c-bg);
+      border: 1px solid var(--c-border);
+      color: var(--c-txt);
+      font-family: 'Onest', sans-serif;
+      font-size: 0.75rem;
+      padding: 5px 24px 5px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.3s ease;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%238a8a8a' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+    }
+    .currency-select:hover,
+    .currency-select:focus {
+      border-color: var(--c-accent);
+    }
   </style>
 </head>
 <body class="grain">
@@ -277,15 +300,21 @@
               <span class="text-sm text-muted ml-2">· 60 минут</span>
             </div>
             <!-- Currency converter -->
-            <div id="currencyGrid" class="flex flex-wrap gap-1.5 mb-6">
-              <span class="text-[11px] text-muted bg-bg/50 px-2 py-1 rounded-full border border-border" data-cur="RUB">≈ <span class="currency-val">…</span> ₽</span>
-              <span class="text-[11px] text-muted bg-bg/50 px-2 py-1 rounded-full border border-border" data-cur="EUR">≈ <span class="currency-val">…</span> €</span>
-              <span class="text-[11px] text-muted bg-bg/50 px-2 py-1 rounded-full border border-border" data-cur="KZT">≈ <span class="currency-val">…</span> ₸</span>
-              <span class="text-[11px] text-muted bg-bg/50 px-2 py-1 rounded-full border border-border" data-cur="BYN">≈ <span class="currency-val">…</span> Br</span>
-              <span class="text-[11px] text-muted bg-bg/50 px-2 py-1 rounded-full border border-border" data-cur="UAH">≈ <span class="currency-val">…</span> ₴</span>
-              <span class="text-[11px] text-muted bg-bg/50 px-2 py-1 rounded-full border border-border" data-cur="GEL">≈ <span class="currency-val">…</span> ₾</span>
-              <span class="text-[11px] text-muted bg-bg/50 px-2 py-1 rounded-full border border-border" data-cur="TRY">≈ <span class="currency-val">…</span> ₺</span>
-              <span class="text-[11px] text-muted bg-bg/50 px-2 py-1 rounded-full border border-border" data-cur="AED">≈ <span class="currency-val">…</span> AED</span>
+            <div id="currencyConverter" class="flex items-center gap-2.5 mb-6">
+              <span id="convertedPrice" class="text-sm text-muted transition-opacity duration-300">в вашей валюте</span>
+              <select id="currencySelect" class="currency-select">
+                <option value="">Валюта</option>
+                <option value="RUB">RUB ₽</option>
+                <option value="EUR">EUR €</option>
+                <option value="KZT">KZT ₸</option>
+                <option value="BYN">BYN Br</option>
+                <option value="UAH">UAH ₴</option>
+                <option value="GEL">GEL ₾</option>
+                <option value="TRY">TRY ₺</option>
+                <option value="AED">AED</option>
+                <option value="GBP">GBP £</option>
+                <option value="ILS">ILS ₪</option>
+              </select>
             </div>
 
             <!-- CTA -->
@@ -429,22 +458,36 @@
 
     // Currency converter
     (function() {
-      const PRICE = 130;
+      var PRICE = 130;
+      var symbols = {RUB:'₽',EUR:'€',KZT:'₸',BYN:'Br',UAH:'₴',GEL:'₾',TRY:'₺',AED:'AED',GBP:'£',ILS:'₪'};
+      var rates = null;
+      var select = document.getElementById('currencySelect');
+      var display = document.getElementById('convertedPrice');
+      var converter = document.getElementById('currencyConverter');
+
       function fmt(n) {
         return n >= 1000 ? Math.round(n).toLocaleString('ru-RU') : n < 10 ? n.toFixed(1) : Math.round(n).toString();
       }
+
+      function update() {
+        var code = select.value;
+        if (!code || !rates) return;
+        var rate = rates[code];
+        if (!rate) return;
+        display.style.opacity = '0';
+        setTimeout(function() {
+          display.textContent = '≈ ' + fmt(PRICE * rate) + ' ' + (symbols[code] || code);
+          display.style.opacity = '1';
+        }, 150);
+      }
+
+      select.addEventListener('change', update);
+
       fetch('https://api.exchangerate-api.com/v4/latest/USD')
         .then(function(r) { return r.json(); })
-        .then(function(data) {
-          document.querySelectorAll('[data-cur]').forEach(function(el) {
-            var code = el.getAttribute('data-cur');
-            var rate = data.rates[code];
-            if (rate) el.querySelector('.currency-val').textContent = fmt(PRICE * rate);
-          });
-        })
+        .then(function(data) { rates = data.rates; })
         .catch(function() {
-          var grid = document.getElementById('currencyGrid');
-          if (grid) grid.style.display = 'none';
+          if (converter) converter.style.display = 'none';
         });
     })();
   </script>
