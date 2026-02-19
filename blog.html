@@ -10,7 +10,7 @@
     (function(){
       if(localStorage.getItem('theme')==='light'){
         document.documentElement.classList.add('light');
-        document.documentElement.style.background='#e8e8e3';
+        document.documentElement.style.background='#3a3a36';
       }
     })();
   </script>
@@ -55,19 +55,19 @@
       --c-shadow-hover: rgba(0, 0, 0, 0.35);
     }
     html.light {
-      --c-bg: #e8e8e3;
-      --c-txt: #1a1a1a;
-      --c-card: rgba(255, 255, 255, 0.5);
-      --c-border: rgba(255, 255, 255, 0.6);
-      --c-muted: #555555;
+      --c-bg: #3a3a36;
+      --c-txt: #e0e0dc;
+      --c-card: rgba(255, 255, 255, 0.07);
+      --c-border: rgba(255, 255, 255, 0.1);
+      --c-muted: #9a9a94;
       --c-accent: #c8ff00;
       --c-accent-rgb: 200, 255, 0;
-      --c-accent-glow: rgba(200, 255, 0, 0.4);
+      --c-accent-glow: rgba(200, 255, 0, 0.3);
       --c-accent-btn-text: #0a0a0a;
-      --c-watermark: rgba(200, 255, 0, 0.1);
-      --c-watermark-hover: rgba(200, 255, 0, 0.18);
-      --c-shadow: rgba(0, 0, 0, 0.06);
-      --c-shadow-hover: rgba(0, 0, 0, 0.12);
+      --c-watermark: rgba(200, 255, 0, 0.06);
+      --c-watermark-hover: rgba(200, 255, 0, 0.12);
+      --c-shadow: rgba(0, 0, 0, 0.3);
+      --c-shadow-hover: rgba(0, 0, 0, 0.45);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -419,7 +419,7 @@
       const saved = localStorage.getItem('theme');
       if (saved === 'light') {
         html.classList.add('light');
-        html.style.background = '#e8e8e3';
+        html.style.background = '#3a3a36';
       } else {
         html.style.background = '#0a0a0a';
       }
@@ -430,7 +430,7 @@
       html.classList.toggle('light');
       const isLight = html.classList.contains('light');
       localStorage.setItem('theme', isLight ? 'light' : 'dark');
-      html.style.background = isLight ? '#e8e8e3' : '#0a0a0a';
+      html.style.background = isLight ? '#3a3a36' : '#0a0a0a';
     });
 
     const observer = new IntersectionObserver((entries) => {
