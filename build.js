@@ -1,0 +1,590 @@
+const fs = require('fs');
+const path = require('path');
+const { marked } = require('marked');
+
+// ── Helpers ──────────────────────────────────────────────
+
+function parseFrontmatter(content) {
+  const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+  if (!match) return { meta: {}, body: content };
+
+  const meta = {};
+  for (const line of match[1].split('\n')) {
+    const m = line.match(/^(\w+):\s*(.+)$/);
+    if (!m) continue;
+    let val = m[2].trim();
+    // Remove quotes
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+      val = val.slice(1, -1);
+    }
+    // Parse array
+    if (val.startsWith('[') && val.endsWith(']')) {
+      val = val.slice(1, -1).split(',').map(s => s.trim());
+    }
+    meta[m[1]] = val;
+  }
+
+  return { meta, body: match[2] };
+}
+
+function slugFromFilename(filename) {
+  // 2026-02-19-some-slug.md → some-slug
+  return filename.replace(/^\d{4}-\d{2}-\d{2}-/, '').replace(/\.md$/, '');
+}
+
+function formatDate(dateStr) {
+  const months = [
+    'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+    'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
+  ];
+  const d = new Date(dateStr + 'T00:00:00');
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+// ── Shared HTML pieces ───────────────────────────────────
+
+const HEAD_COMMON = (title, description) => `<meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <title>${title}</title>
+  <meta name="description" content="${description}">
+  <script>
+    (function(){
+      if(localStorage.getItem('theme')==='light'){
+        document.documentElement.classList.add('light');
+        document.documentElement.style.background='#f5f5f0';
+      }
+    })();
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg: 'var(--c-bg)',
+            card: 'var(--c-card)',
+            border: 'var(--c-border)',
+            accent: 'var(--c-accent)',
+            txt: 'var(--c-txt)',
+            muted: 'var(--c-muted)',
+          },
+          fontFamily: {
+            heading: ['Unbounded', 'sans-serif'],
+            body: ['Onest', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600;700&family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">`;
+
+const STYLES = `<style>
+    :root {
+      --c-bg: #0a0a0a;
+      --c-txt: #e5e5e5;
+      --c-card: #141414;
+      --c-border: #2a2a2a;
+      --c-muted: #8a8a8a;
+      --c-accent: #c8ff00;
+      --c-accent-rgb: 200, 255, 0;
+      --c-accent-glow: rgba(200, 255, 0, 0.3);
+      --c-accent-btn-text: #0a0a0a;
+      --c-watermark: rgba(200, 255, 0, 0.06);
+      --c-watermark-hover: rgba(200, 255, 0, 0.12);
+    }
+    html.light {
+      --c-bg: #f5f5f0;
+      --c-txt: #1a1a1a;
+      --c-card: #ffffff;
+      --c-border: #e0e0e0;
+      --c-muted: #666666;
+      --c-accent: #1a7a3a;
+      --c-accent-rgb: 26, 122, 58;
+      --c-accent-glow: rgba(26, 122, 58, 0.25);
+      --c-accent-btn-text: #ffffff;
+      --c-watermark: rgba(26, 122, 58, 0.06);
+      --c-watermark-hover: rgba(26, 122, 58, 0.14);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Onest', sans-serif;
+      background: var(--c-bg);
+      color: var(--c-txt);
+      overflow-x: hidden;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .theme-transition,
+    nav, footer, .card-hover, .btn-accent, .btn-outline,
+    .sticky-cta, section {
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .grain::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 256px 256px;
+    }
+
+    .fade-in {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .accent-line::before {
+      content: '';
+      display: block;
+      width: 60px;
+      height: 3px;
+      background: var(--c-accent);
+      margin-bottom: 16px;
+    }
+
+    .card-hover {
+      transition: border-color 0.3s ease, transform 0.3s ease, background-color 0.3s ease;
+    }
+    .card-hover:hover {
+      border-color: var(--c-accent);
+      transform: translateY(-4px);
+    }
+
+    .btn-accent {
+      color: var(--c-accent-btn-text);
+      transition: box-shadow 0.3s ease, transform 0.15s ease, background-color 0.3s ease, color 0.3s ease;
+    }
+    .btn-accent:hover {
+      box-shadow: 0 0 30px var(--c-accent-glow);
+    }
+    .btn-accent:active {
+      transform: scale(0.97);
+    }
+
+    .btn-outline {
+      transition: border-color 0.3s ease, color 0.3s ease;
+    }
+    .btn-outline:hover {
+      border-color: var(--c-accent);
+      color: var(--c-accent);
+    }
+
+    .nav-blur {
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    .stat-value {
+      font-family: 'Unbounded', sans-serif;
+    }
+
+    .theme-toggle {
+      position: relative;
+      width: 56px;
+      height: 28px;
+      background: var(--c-card);
+      border: 1px solid var(--c-border);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+      flex-shrink: 0;
+    }
+    .theme-toggle:hover {
+      border-color: var(--c-accent);
+    }
+    .theme-toggle-thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 20px;
+      height: 20px;
+      background: var(--c-accent);
+      border-radius: 50%;
+      transition: transform 0.3s ease, background-color 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    html.light .theme-toggle-thumb {
+      transform: translateX(28px);
+    }
+    .theme-toggle-icon {
+      width: 12px;
+      height: 12px;
+      fill: var(--c-accent-btn-text);
+      transition: fill 0.3s ease;
+    }
+    .theme-toggle .icon-sun { display: none; }
+    .theme-toggle .icon-moon { display: block; }
+    html.light .theme-toggle .icon-sun { display: block; }
+    html.light .theme-toggle .icon-moon { display: none; }
+
+    /* Prose styles for blog articles */
+    .prose h2 {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      color: var(--c-txt);
+    }
+    .prose h3 {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      color: var(--c-txt);
+    }
+    .prose p {
+      margin-bottom: 1.25rem;
+      line-height: 1.75;
+      color: var(--c-muted);
+    }
+    .prose strong {
+      color: var(--c-txt);
+      font-weight: 600;
+    }
+    .prose a {
+      color: var(--c-accent);
+      text-decoration: underline;
+      text-underline-offset: 4px;
+      transition: opacity 0.2s ease;
+    }
+    .prose a:hover {
+      opacity: 0.8;
+    }
+    .prose ul, .prose ol {
+      margin-bottom: 1.25rem;
+      padding-left: 1.5rem;
+      color: var(--c-muted);
+    }
+    .prose li {
+      margin-bottom: 0.5rem;
+      line-height: 1.75;
+    }
+    .prose li strong {
+      color: var(--c-txt);
+    }
+    .prose blockquote {
+      border-left: 3px solid var(--c-accent);
+      padding-left: 1rem;
+      margin-bottom: 1.25rem;
+      font-style: italic;
+      color: var(--c-muted);
+    }
+    .prose code {
+      background: var(--c-card);
+      border: 1px solid var(--c-border);
+      padding: 0.15em 0.4em;
+      border-radius: 6px;
+      font-size: 0.875em;
+    }
+    .prose pre {
+      background: var(--c-card);
+      border: 1px solid var(--c-border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+      overflow-x: auto;
+    }
+    .prose pre code {
+      background: none;
+      border: none;
+      padding: 0;
+    }
+  </style>`;
+
+const NAV = `<nav class="fixed top-0 left-0 right-0 z-50 nav-blur bg-bg/80 border-b border-border">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <a href="/" class="font-heading text-lg font-semibold text-txt hover:text-accent transition-colors">Лев Ом</a>
+      <div class="flex items-center gap-3 sm:gap-5">
+        <a href="/blog.html" class="hidden sm:block text-sm text-muted hover:text-txt transition-colors">Блог</a>
+        <a href="/consultations.html" class="hidden sm:block text-sm text-muted hover:text-txt transition-colors">Консультации</a>
+        <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему">
+          <div class="theme-toggle-thumb">
+            <svg class="theme-toggle-icon icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/></svg>
+            <svg class="theme-toggle-icon icon-sun" viewBox="0 0 24 24"><path d="M12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12zm0-16v2m0 12v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
+          </div>
+        </button>
+        <a href="/ai-agents.html" class="text-sm font-semibold bg-accent px-4 py-2 rounded-lg btn-accent">Консультация</a>
+      </div>
+    </div>
+  </nav>`;
+
+const FOOTER = `<footer class="border-t border-border py-12">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-6">
+        <a href="/" class="font-heading text-lg font-semibold text-txt hover:text-accent transition-colors">Лев Ом</a>
+        <div class="flex items-center gap-6">
+          <a href="https://www.instagram.com/omelnickiy_ai/" target="_blank" rel="noopener" class="text-sm text-muted hover:text-txt transition-colors">Instagram</a>
+          <a href="https://www.tiktok.com/@omelnickiy_ai" target="_blank" rel="noopener" class="text-sm text-muted hover:text-txt transition-colors">TikTok</a>
+          <a href="https://t.me/omelnickiy_ai" target="_blank" rel="noopener" class="text-sm text-muted hover:text-txt transition-colors">Telegram</a>
+          <a href="https://sintez.agency" target="_blank" rel="noopener" class="text-sm text-muted hover:text-txt transition-colors">SINTEZ</a>
+        </div>
+      </div>
+    </div>
+  </footer>`;
+
+const SCRIPTS = `<script>
+    (function() {
+      const html = document.documentElement;
+      const saved = localStorage.getItem('theme');
+      if (saved === 'light') {
+        html.classList.add('light');
+        html.style.background = '#f5f5f0';
+      } else {
+        html.style.background = '#0a0a0a';
+      }
+    })();
+
+    document.getElementById('themeToggle').addEventListener('click', function() {
+      const html = document.documentElement;
+      html.classList.toggle('light');
+      const isLight = html.classList.contains('light');
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+      html.style.background = isLight ? '#f5f5f0' : '#0a0a0a';
+    });
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+  </script>`;
+
+// ── Card HTML (reused in blog.html and index.html preview) ──
+
+function postCard(post) {
+  const tagsHtml = Array.isArray(post.meta.tags)
+    ? post.meta.tags.map(t => `<span class="text-xs text-accent bg-accent/10 px-2.5 py-0.5 rounded-full">${t}</span>`).join(' ')
+    : '';
+
+  return `<a href="/blog/${post.slug}.html" class="fade-in bg-card border border-border rounded-2xl p-6 sm:p-8 card-hover block group">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="text-xs text-muted">${formatDate(post.meta.date)}</span>
+            ${tagsHtml ? `<span class="text-muted">·</span> ${tagsHtml}` : ''}
+          </div>
+          <h3 class="font-heading text-base sm:text-lg font-semibold mb-3 group-hover:text-accent transition-colors">${post.meta.title}</h3>
+          <p class="text-sm text-muted leading-relaxed">${post.meta.description || ''}</p>
+        </a>`;
+}
+
+// ── Main build ───────────────────────────────────────────
+
+const postsDir = path.join(__dirname, 'posts');
+const blogDir = path.join(__dirname, 'blog');
+
+// Ensure blog/ exists
+if (!fs.existsSync(blogDir)) fs.mkdirSync(blogDir, { recursive: true });
+
+// Read and parse posts
+const files = fs.readdirSync(postsDir).filter(f => f.endsWith('.md'));
+const posts = files.map(file => {
+  const raw = fs.readFileSync(path.join(postsDir, file), 'utf-8');
+  const { meta, body } = parseFrontmatter(raw);
+  const slug = slugFromFilename(file);
+  const html = marked(body);
+  return { file, slug, meta, html };
+});
+
+// Sort by date descending
+posts.sort((a, b) => (b.meta.date || '').localeCompare(a.meta.date || ''));
+
+console.log(`Found ${posts.length} post(s)`);
+
+// ── 1. Generate individual post pages ────────────────────
+
+for (const post of posts) {
+  const page = `<!DOCTYPE html>
+<html lang="ru" style="background:#0a0a0a">
+<head>
+  ${HEAD_COMMON(`${post.meta.title} — Лев Ом`, post.meta.description || '')}
+  ${STYLES}
+</head>
+<body class="grain">
+
+  ${NAV}
+
+  <!-- ARTICLE -->
+  <article class="pt-32 sm:pt-40 pb-16 sm:pb-20">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6">
+      <div class="fade-in">
+        <!-- Back link -->
+        <a href="/blog.html" class="inline-flex items-center gap-2 text-sm text-muted hover:text-accent transition-colors mb-8">
+          &larr; Все статьи
+        </a>
+
+        <!-- Meta -->
+        <div class="flex items-center gap-2 mb-6">
+          <span class="text-sm text-muted">${formatDate(post.meta.date)}</span>
+          ${Array.isArray(post.meta.tags) ? `<span class="text-muted">·</span> ${post.meta.tags.map(t => `<span class="text-xs text-accent bg-accent/10 px-2.5 py-0.5 rounded-full">${t}</span>`).join(' ')}` : ''}
+        </div>
+
+        <!-- Title -->
+        <h1 class="font-heading text-2xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-10">
+          ${post.meta.title}
+        </h1>
+      </div>
+
+      <!-- Content -->
+      <div class="fade-in prose">
+        ${post.html}
+      </div>
+    </div>
+  </article>
+
+  <!-- CTA -->
+  <section class="py-20 sm:py-28">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 text-center">
+      <div class="fade-in">
+        <h2 class="font-heading text-2xl sm:text-3xl lg:text-4xl font-bold mb-6">
+          Хотите внедрить<br><span class="text-accent">AI в свой бизнес?</span>
+        </h2>
+        <p class="text-muted mb-10 max-w-lg mx-auto">Запишитесь на консультацию — разберём ваши процессы и составим план.</p>
+        <a href="/ai-agents.html" class="inline-flex items-center justify-center gap-2 bg-accent font-semibold px-8 py-4 rounded-xl text-base btn-accent">
+          Консультация по AI-агентам &rarr;
+        </a>
+      </div>
+    </div>
+  </section>
+
+  ${FOOTER}
+
+  ${SCRIPTS}
+
+</body>
+</html>`;
+
+  fs.writeFileSync(path.join(blogDir, `${post.slug}.html`), page);
+  console.log(`  → blog/${post.slug}.html`);
+}
+
+// ── 2. Generate blog.html listing ────────────────────────
+
+const cardsHtml = posts.map(postCard).join('\n        ');
+
+const blogPage = `<!DOCTYPE html>
+<html lang="ru" style="background:#0a0a0a">
+<head>
+  ${HEAD_COMMON('Блог — Лев Ом', 'Статьи про AI-агентов, маркетинг и автоматизацию для бизнеса. Практические советы и кейсы.')}
+  ${STYLES}
+</head>
+<body class="grain">
+
+  ${NAV}
+
+  <!-- HERO (compact) -->
+  <section class="pt-32 sm:pt-40 pb-16 sm:pb-20">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="fade-in max-w-2xl">
+        <h1 class="font-heading text-3xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+          Блог
+        </h1>
+        <p class="text-lg sm:text-xl text-muted leading-relaxed">
+          Пишу про AI-агентов, маркетинг и&nbsp;автоматизацию. Реальные кейсы, инструменты и&nbsp;практические советы.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- POSTS -->
+  <section class="pb-20 sm:pb-28">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        ${cardsHtml}
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="py-20 sm:py-28">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 text-center">
+      <div class="fade-in">
+        <h2 class="font-heading text-2xl sm:text-3xl lg:text-4xl font-bold mb-6">
+          Давайте<br><span class="text-accent">поработаем вместе</span>
+        </h2>
+        <p class="text-muted mb-10 max-w-lg mx-auto">Напишите в Telegram, обсудим ваш проект и найдём точки роста.</p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="/ai-agents.html" class="inline-flex items-center justify-center gap-2 bg-accent font-semibold px-8 py-4 rounded-xl text-base btn-accent">
+            Консультация по AI-агентам &rarr;
+          </a>
+          <a href="https://t.me/omelnickiy" target="_blank" rel="noopener" class="inline-flex items-center justify-center gap-2 border border-border text-txt font-medium px-8 py-4 rounded-xl text-base btn-outline">
+            Написать в Telegram
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  ${FOOTER}
+
+  ${SCRIPTS}
+
+</body>
+</html>`;
+
+fs.writeFileSync(path.join(__dirname, 'blog.html'), blogPage);
+console.log('  → blog.html');
+
+// ── 3. Update index.html — inject blog preview ──────────
+
+const indexPath = path.join(__dirname, 'index.html');
+let indexHtml = fs.readFileSync(indexPath, 'utf-8');
+
+const previewPosts = posts.slice(0, 3);
+const previewCards = previewPosts.map(postCard).join('\n        ');
+
+const previewSection = `<!-- BLOG_PREVIEW_START -->
+  <section class="py-20 sm:py-28">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="fade-in">
+        <div class="flex items-end justify-between mb-12">
+          <h2 class="font-heading text-2xl sm:text-3xl lg:text-4xl font-bold accent-line">Блог</h2>
+          <a href="/blog.html" class="text-sm text-muted hover:text-accent transition-colors hidden sm:block">Все статьи &rarr;</a>
+        </div>
+      </div>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        ${previewCards}
+      </div>
+      <div class="mt-8 text-center sm:hidden">
+        <a href="/blog.html" class="text-sm text-muted hover:text-accent transition-colors">Все статьи &rarr;</a>
+      </div>
+    </div>
+  </section>
+  <!-- BLOG_PREVIEW_END -->`;
+
+const startMarker = '<!-- BLOG_PREVIEW_START -->';
+const endMarker = '<!-- BLOG_PREVIEW_END -->';
+
+if (indexHtml.includes(startMarker) && indexHtml.includes(endMarker)) {
+  // Replace existing preview
+  const startIdx = indexHtml.indexOf(startMarker);
+  const endIdx = indexHtml.indexOf(endMarker) + endMarker.length;
+  indexHtml = indexHtml.slice(0, startIdx) + previewSection + indexHtml.slice(endIdx);
+} else {
+  console.log('  ⚠ Blog markers not found in index.html — skipping preview injection');
+}
+
+fs.writeFileSync(indexPath, indexHtml);
+console.log('  → index.html (preview updated)');
+
+console.log('\nDone!');

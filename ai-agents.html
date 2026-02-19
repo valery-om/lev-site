@@ -267,6 +267,7 @@
     <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
       <a href="/" class="font-heading text-lg font-semibold text-txt hover:text-accent transition-colors">Лев Ом</a>
       <div class="flex items-center gap-3 sm:gap-5">
+        <a href="/blog.html" class="hidden sm:block text-sm text-muted hover:text-txt transition-colors">Блог</a>
         <a href="/consultations.html" class="hidden sm:block text-sm text-muted hover:text-txt transition-colors">Консультации</a>
         <!-- Theme toggle -->
         <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему">
@@ -472,7 +473,18 @@
         <div class="relative z-10">
           <div class="accent-line flex justify-center"><span></span></div>
           <p class="text-sm text-muted uppercase tracking-widest mb-4 font-medium">Консультация</p>
-          <div class="font-heading text-5xl sm:text-7xl font-bold text-accent mb-8">$130</div>
+          <div class="font-heading text-5xl sm:text-7xl font-bold text-accent mb-4">$130</div>
+          <!-- Currency converter -->
+          <div id="currencyGrid" class="flex flex-wrap justify-center gap-2 mb-8">
+            <span class="text-xs text-muted bg-bg/50 px-3 py-1.5 rounded-full border border-border" data-cur="RUB">≈ <span class="currency-val">…</span> ₽</span>
+            <span class="text-xs text-muted bg-bg/50 px-3 py-1.5 rounded-full border border-border" data-cur="EUR">≈ <span class="currency-val">…</span> €</span>
+            <span class="text-xs text-muted bg-bg/50 px-3 py-1.5 rounded-full border border-border" data-cur="KZT">≈ <span class="currency-val">…</span> ₸</span>
+            <span class="text-xs text-muted bg-bg/50 px-3 py-1.5 rounded-full border border-border" data-cur="BYN">≈ <span class="currency-val">…</span> Br</span>
+            <span class="text-xs text-muted bg-bg/50 px-3 py-1.5 rounded-full border border-border" data-cur="UAH">≈ <span class="currency-val">…</span> ₴</span>
+            <span class="text-xs text-muted bg-bg/50 px-3 py-1.5 rounded-full border border-border" data-cur="GEL">≈ <span class="currency-val">…</span> ₾</span>
+            <span class="text-xs text-muted bg-bg/50 px-3 py-1.5 rounded-full border border-border" data-cur="TRY">≈ <span class="currency-val">…</span> ₺</span>
+            <span class="text-xs text-muted bg-bg/50 px-3 py-1.5 rounded-full border border-border" data-cur="AED">≈ <span class="currency-val">…</span> AED</span>
+          </div>
           <ul class="text-left max-w-sm mx-auto space-y-3 mb-10">
             <li class="flex items-start gap-3 text-sm text-muted">
               <span class="text-accent mt-0.5">&#10003;</span>
@@ -650,6 +662,27 @@
     }, { threshold: 0 });
 
     stickyObserver.observe(hero);
+
+    // Currency converter
+    (function() {
+      const PRICE = 130;
+      function fmt(n) {
+        return n >= 1000 ? Math.round(n).toLocaleString('ru-RU') : n < 10 ? n.toFixed(1) : Math.round(n).toString();
+      }
+      fetch('https://api.exchangerate-api.com/v4/latest/USD')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          document.querySelectorAll('[data-cur]').forEach(function(el) {
+            var code = el.getAttribute('data-cur');
+            var rate = data.rates[code];
+            if (rate) el.querySelector('.currency-val').textContent = fmt(PRICE * rate);
+          });
+        })
+        .catch(function() {
+          var grid = document.getElementById('currencyGrid');
+          if (grid) grid.style.display = 'none';
+        });
+    })();
   </script>
 
 </body>
