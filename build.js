@@ -71,7 +71,7 @@ const HEAD_COMMON = (title, description) => `<meta charset="UTF-8">
           },
           fontFamily: {
             heading: ['Unbounded', 'sans-serif'],
-            body: ['Onest', 'sans-serif'],
+            body: ['Manrope', 'sans-serif'],
           },
         },
       },
@@ -79,7 +79,7 @@ const HEAD_COMMON = (title, description) => `<meta charset="UTF-8">
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600;700&family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">`;
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">`;
 
 const STYLES = `<style>
     :root {
@@ -116,7 +116,7 @@ const STYLES = `<style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html { scroll-behavior: smooth; }
     body {
-      font-family: 'Onest', sans-serif;
+      font-family: 'Manrope', sans-serif;
       background: var(--c-bg);
       color: var(--c-txt);
       overflow-x: hidden;
