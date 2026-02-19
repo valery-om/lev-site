@@ -241,17 +241,35 @@
     html.light .theme-toggle .icon-moon { display: none; }
 
     /* Prose styles for blog articles */
+    .prose > *:first-child { margin-top: 0; }
+
     .prose h2 {
       font-family: 'Unbounded', sans-serif;
-      font-size: 1.5rem;
+      font-size: 1.35rem;
       font-weight: 700;
-      margin-top: 2.5rem;
-      margin-bottom: 1rem;
+      margin-top: 3.5rem;
+      margin-bottom: 1.25rem;
+      padding-top: 2.5rem;
+      border-top: 1px solid var(--c-border);
       color: var(--c-txt);
+    }
+    .prose h2::before {
+      content: '';
+      display: block;
+      width: 40px;
+      height: 3px;
+      background: var(--c-accent);
+      margin-bottom: 1rem;
+      border-radius: 2px;
+    }
+    .prose > h2:first-child {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: none;
     }
     .prose h3 {
       font-family: 'Unbounded', sans-serif;
-      font-size: 1.125rem;
+      font-size: 1.05rem;
       font-weight: 600;
       margin-top: 2rem;
       margin-bottom: 0.75rem;
@@ -259,8 +277,14 @@
     }
     .prose p {
       margin-bottom: 1.25rem;
-      line-height: 1.75;
+      line-height: 1.8;
       color: var(--c-muted);
+    }
+    .prose > p:first-child {
+      font-size: 1.1rem;
+      line-height: 1.75;
+      color: var(--c-txt);
+      opacity: 0.85;
     }
     .prose strong {
       color: var(--c-txt);
@@ -276,7 +300,7 @@
       opacity: 0.8;
     }
     .prose ul, .prose ol {
-      margin-bottom: 1.25rem;
+      margin-bottom: 1.5rem;
       padding-left: 1.5rem;
       color: var(--c-muted);
     }
@@ -287,12 +311,24 @@
     .prose li strong {
       color: var(--c-txt);
     }
+    .prose hr {
+      border: none;
+      height: 1px;
+      background: linear-gradient(to right, var(--c-accent), var(--c-border), transparent);
+      margin: 3rem 0;
+      opacity: 0.5;
+    }
     .prose blockquote {
       border-left: 3px solid var(--c-accent);
-      padding-left: 1rem;
-      margin-bottom: 1.25rem;
+      background: var(--c-card);
+      border-radius: 0 12px 12px 0;
+      padding: 1.25rem 1.5rem;
+      margin: 2rem 0;
       font-style: italic;
       color: var(--c-muted);
+    }
+    .prose blockquote p:last-child {
+      margin-bottom: 0;
     }
     .prose code {
       background: var(--c-card);
@@ -317,8 +353,16 @@
     .prose table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 1.25rem;
+      margin-bottom: 1.5rem;
       font-size: 0.9rem;
+      display: block;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .prose thead, .prose tbody, .prose tr {
+      display: table;
+      width: 100%;
+      table-layout: fixed;
     }
     .prose th {
       background: var(--c-card);
@@ -342,6 +386,13 @@
     }
     .prose tbody tr:hover {
       background: var(--c-card);
+    }
+    @media (max-width: 640px) {
+      .prose h2 { font-size: 1.15rem; margin-top: 2.5rem; padding-top: 2rem; }
+      .prose h3 { font-size: 0.95rem; }
+      .prose blockquote { padding: 1rem 1.25rem; }
+      .prose thead, .prose tbody, .prose tr { display: table; width: 100%; table-layout: auto; }
+      .prose th, .prose td { padding: 0.6rem 0.75rem; font-size: 0.82rem; }
     }
   </style>
 </head>
@@ -413,6 +464,7 @@
 <blockquote>
 <p>«Мы перешли от нейронок, которые отвечают на вопросы, к нейронкам, которые делают действия. Раньше ты спрашивал — она говорила. Сейчас ты говоришь — она делает.»</p>
 </blockquote>
+<hr>
 <h2>Как это работает: от первого сообщения до закрытой сделки</h2>
 <p>Покажу на примере с электровелосипедами. Клиент пишет в Авито: «Сколько стоит взять велосипед на месяц?»</p>
 <h3>1. Сообщение попадает в агента</h3>
@@ -421,6 +473,7 @@
 <p>Агент берёт ответ не из воздуха. Ему загружены все тарифы и условия аренды, характеристики каждого велосипеда, ответы на частые вопросы: залог, страховка, зарядка, ремонт. В конце каждого ответа мягко спрашивает: «Готовы перейти к оформлению?»</p>
 <h3>3. Клиент созрел, срабатывает триггер</h3>
 <p>Когда клиент говорит «да, оформляем», система отправляет уведомление менеджеру в Telegram: «Клиент готов. Подключись.» Менеджер приходит и закрывает сделку. <strong>Весь цикл продажи я не отдаю нейросети. Квалификацию лида - спокойно. Закрытие - живой человек.</strong></p>
+<hr>
 <h2>Что нужно, чтобы это собрать</h2>
 <p>Четыре компонента:</p>
 <table>
@@ -452,10 +505,12 @@
 <td>Telegram бесплатно, остальные по тарифу</td>
 </tr>
 </tbody></table>
+<hr>
 <h2>Почему многие думают, что AI-агенты не работают</h2>
 <p>Часто слышу: «Пробовали бот, отвечает как робот». Понимаю, откуда это. В 2023-м ChatGPT в бесплатной версии правда звучал деревянно. Люди попробовали, разочаровались и закрыли для себя тему.</p>
 <p>За два года всё сильно изменилось. Современные модели (Claude, GPT-4o, Gemini) пишут так, что клиенты не замечают разницу. Особенно если промт написан грамотно и агент точно знает свой продукт.</p>
 <p>Прежние «боты» работали по скриптам: только заданные сценарии. Современные агенты понимают контекст, адаптируются к разговору, держат нить диалога. Другой уровень.</p>
+<hr>
 <h2>Что агент умеет, а что лучше не доверять</h2>
 <p><strong>Агент делает хорошо:</strong></p>
 <ul>
@@ -473,6 +528,7 @@
 <li>Юридически значимые договорённости</li>
 <li>Решения, где нужен опыт и интуиция</li>
 </ul>
+<hr>
 <h2>Какие каналы подключить первыми</h2>
 <p>Зависит от того, откуда приходят клиенты. Технически подключается всё, где есть API, а это почти все платформы:</p>
 <ul>
@@ -482,6 +538,7 @@
 <li><strong>Instagram</strong> - через Meta API, чуть сложнее, но работает</li>
 </ul>
 <p>Начните с Telegram и одного канала, где больше всего лидов. Не пытайтесь сразу охватить всё.</p>
+<hr>
 <h2>Частые вопросы</h2>
 <h3>Агент может написать клиенту что-то не то?</h3>
 <p>Теоретически да. Поэтому грамотный промт — половина работы. Нужно прописать ограничения: что агент говорит, а что нет. На первых неделях стоит просматривать логи диалогов.</p>
@@ -491,6 +548,7 @@
 <p>Для базовых сценариев нет. N8N - визуальная платформа без кода, соединяете блоки и прописываете логику. Для нестандартных интеграций понадобится человек с техническим опытом.</p>
 <h3>Легально ли отвечать клиентам через ИИ?</h3>
 <p>Да. Законодательных запретов нет. Многие крупные компании уже так делают. Единственное: не вводить клиента в заблуждение по существу сделки.</p>
+<hr>
 <h2>Итог</h2>
 <p>Агент снимает с менеджера всю первичную обработку. Ноль пропущенных лидов в нерабочее время, ответ за секунды, менеджер занимается только тёплыми клиентами, масштабирование без роста штата.</p>
 <p>Тот предприниматель с велосипедами после созвона сказал: «Я думал, это что-то сложное и дорогое. Оказалось — сервер за 700 рублей в месяц и день настройки». Так и есть.</p>
