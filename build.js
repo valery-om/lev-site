@@ -357,6 +357,35 @@ const STYLES = `<style>
       border: none;
       padding: 0;
     }
+    .prose table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1.25rem;
+      font-size: 0.9rem;
+    }
+    .prose th {
+      background: var(--c-card);
+      border: 1px solid var(--c-border);
+      padding: 0.75rem 1rem;
+      text-align: left;
+      font-weight: 600;
+      color: var(--c-txt);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .prose td {
+      border: 1px solid var(--c-border);
+      padding: 0.75rem 1rem;
+      color: var(--c-muted);
+      vertical-align: top;
+    }
+    .prose td strong {
+      color: var(--c-txt);
+    }
+    .prose tbody tr:hover {
+      background: var(--c-card);
+    }
   </style>`;
 
 const NAV = `<nav class="fixed top-0 left-0 right-0 z-50 nav-blur bg-bg/80 border-b border-border">
