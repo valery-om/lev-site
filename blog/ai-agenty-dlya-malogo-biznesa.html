@@ -159,6 +159,46 @@
       font-family: 'Unbounded', sans-serif;
     }
 
+    /* Mobile menu */
+    .mobile-menu {
+      position: fixed;
+      top: 64px;
+      left: 0;
+      right: 0;
+      z-index: 49;
+      background: var(--c-card);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border-bottom: 1px solid var(--c-border);
+      box-shadow: 0 8px 32px var(--c-shadow);
+      padding: 1rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      transform: translateY(-100%);
+      opacity: 0;
+      visibility: hidden;
+      transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .mobile-menu.open {
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+    }
+    .menu-icon-line {
+      transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease;
+      transform-origin: center;
+    }
+    .menu-open .menu-icon-line:nth-child(1) {
+      transform: translateY(6px) rotate(45deg);
+    }
+    .menu-open .menu-icon-line:nth-child(2) {
+      opacity: 0;
+    }
+    .menu-open .menu-icon-line:nth-child(3) {
+      transform: translateY(-6px) rotate(-45deg);
+    }
+
     .theme-toggle {
       position: relative;
       width: 56px;
@@ -290,10 +330,23 @@
             <svg class="theme-toggle-icon icon-sun" viewBox="0 0 24 24"><path d="M12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12zm0-16v2m0 12v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>
           </div>
         </button>
-        <a href="/ai-agents.html" class="text-sm font-semibold bg-accent px-4 py-2 rounded-lg btn-accent">Консультация</a>
+        <a href="/ai-agents.html" class="hidden sm:inline-flex text-sm font-semibold bg-accent px-4 py-2 rounded-lg btn-accent">Консультация</a>
+        <button id="menuToggle" class="sm:hidden w-10 h-10 flex items-center justify-center text-txt" aria-label="Меню">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line class="menu-icon-line" x1="3" y1="6" x2="21" y2="6"/>
+            <line class="menu-icon-line" x1="3" y1="12" x2="21" y2="12"/>
+            <line class="menu-icon-line" x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
       </div>
     </div>
   </nav>
+
+  <div id="mobileMenu" class="mobile-menu">
+    <a href="/blog.html" class="text-base text-txt font-medium hover:text-accent transition-colors py-3">Блог</a>
+    <a href="/consultations.html" class="text-base text-txt font-medium hover:text-accent transition-colors py-3">Консультации</a>
+    <a href="/ai-agents.html" class="bg-accent font-semibold px-6 py-3.5 rounded-xl text-sm btn-accent text-center mt-2">Консультация по AI-агентам →</a>
+  </div>
 
   <!-- ARTICLE -->
   <article class="pt-32 sm:pt-40 pb-16 sm:pb-20">
@@ -374,10 +427,11 @@
     <div class="max-w-6xl mx-auto px-4 sm:px-6">
       <div class="flex flex-col sm:flex-row items-center justify-between gap-6">
         <a href="/" class="font-heading text-lg font-semibold text-txt hover:text-accent transition-colors">Лев Ом</a>
-        <div class="flex items-center gap-6">
-          <a href="https://www.instagram.com/omelnickiy_ai/" target="_blank" rel="noopener" class="text-sm text-muted hover:text-txt transition-colors">Instagram</a>
-          <a href="https://www.tiktok.com/@omelnickiy_ai" target="_blank" rel="noopener" class="text-sm text-muted hover:text-txt transition-colors">TikTok</a>
+        <div class="flex items-center gap-6 flex-wrap justify-center">
+          <a href="/blog.html" class="text-sm text-muted hover:text-txt transition-colors">Блог</a>
+          <a href="/consultations.html" class="text-sm text-muted hover:text-txt transition-colors">Консультации</a>
           <a href="https://t.me/omelnickiy_ai" target="_blank" rel="noopener" class="text-sm text-muted hover:text-txt transition-colors">Telegram</a>
+          <a href="https://www.instagram.com/omelnickiy_ai/" target="_blank" rel="noopener" class="text-sm text-muted hover:text-txt transition-colors">Instagram</a>
           <a href="https://sintez.agency" target="_blank" rel="noopener" class="text-sm text-muted hover:text-txt transition-colors">SINTEZ</a>
         </div>
       </div>
@@ -413,6 +467,23 @@
     }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 
     document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    // Mobile menu
+    (function() {
+      var toggle = document.getElementById('menuToggle');
+      var menu = document.getElementById('mobileMenu');
+      if (!toggle || !menu) return;
+      toggle.addEventListener('click', function() {
+        var isOpen = menu.classList.toggle('open');
+        toggle.classList.toggle('menu-open', isOpen);
+      });
+      menu.querySelectorAll('a').forEach(function(a) {
+        a.addEventListener('click', function() {
+          menu.classList.remove('open');
+          toggle.classList.remove('menu-open');
+        });
+      });
+    })();
   </script>
 
 </body>
